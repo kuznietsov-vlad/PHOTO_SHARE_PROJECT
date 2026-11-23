@@ -3,12 +3,15 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from src.database.db import get_db
+from src.routes import auth
 
 app = FastAPI(
     title="PhotoShare API",
     description="REST API для завантаження, трансформації, коментування та оцінювання світлин.",
     version="1.0.0",
 )
+
+app.include_router(auth.router)
 
 
 @app.get("/api/healthchecker", tags=["System"])
