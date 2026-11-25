@@ -3,7 +3,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from src.database.db import get_db
-from src.routes import auth
+from src.routes import auth, users
 
 app = FastAPI(
     title="PhotoShare API",
@@ -12,6 +12,7 @@ app = FastAPI(
 )
 
 app.include_router(auth.router)
+app.include_router(users.router)
 
 
 @app.get("/api/healthchecker", tags=["System"])

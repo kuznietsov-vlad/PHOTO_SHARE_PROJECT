@@ -3,8 +3,9 @@ from datetime import datetime
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from src.database.models import BlacklistedToken, RoleEnum, User
+from src.database.models import BlacklistedToken, Photo, RoleEnum, User
 from src.schemas.auth import UserSignupSchema
+from src.schemas.users import UserUpdateMeSchema
 
 
 def get_user_by_email(email: str, db: Session) -> User | None:
@@ -21,6 +22,10 @@ def get_user_by_id(user_id: int, db: Session) -> User | None:
 
 def count_users(db: Session) -> int:
     return db.scalar(select(func.count(User.id))) or 0
+
+
+def count_user_photos(user_id: int, db: Session) -> int:
+    return db.scalar(select(func.count(Photo.id)).where(Photo.user_id == user_id)) or 0
 
 
 def create_user(
@@ -42,7 +47,38 @@ def create_user(
     return user
 
 
-def add_token_to_blacklist(token: str, expires_at: datetime, db: Session) -> BlacklistedToken:
+def update_user_profile(
+    user: User,
+    body: UserUpdateMeSchema,
+    db: Session,
+) -> User:
+    update_data = body.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(user, field, value)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def update_user_status(user: User, is_active: bool, db: Session) -> User:
+    user.is_active = is_active
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def update_user_role(user: User, role: RoleEnum, db: Session) -> User:
+    user.role = role
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def add_token_to_blacklist(
+    token: str,
+    expires_at: datetime,
+    db: Session,
+) -> BlacklistedToken:
     blacklisted = BlacklistedToken(token=token, expires_at=expires_at)
     db.add(blacklisted)
     db.commit()
